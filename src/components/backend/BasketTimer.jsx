@@ -34,7 +34,7 @@ function BasketTimer({ step, onTimeExpired }) {
     <>
       {step >= 3 && step <= 5 && (
         <div className="relative flex flex-col items-center justify-center h-full">
-          <h1 className={`${krona_one.className} normal-size`}>
+          <h1 className={`${krona_one.className} text-2xl md:text-4xl`}>
             Tid tilbage: {formatTime(timeLeft)}
           </h1>
           {popup && (

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { handlePhoneKeyPress, validateForm } from "../../utils/formUtils";
 import {
   Disclosure,
   DisclosurePanel,
@@ -13,15 +14,15 @@ import { krona_one } from "@/app/fonts.jsx";
 import CartSummary from "./CartSummary";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 
-export default function PersonalForm({
-  personalInfo,
-  ticketQuantity,
-  ticketType,
-  campingOptions,
-  onClick,
-  onNext,
-  onBack,
-}) {
+const countryCodes = [
+  { code: "+45", label: "DK" },
+  { code: "+46", label: "SE" },
+  { code: "+47", label: "NO" },
+  { code: "+49", label: "DE" },
+];
+
+export default function PersonalForm({ bookingData, onClick, onNext, onBack }) {
+  const { personalInfo, ticketQuantity, ticketType, camping } = bookingData;
   const [localPersonalInfo, setLocalPersonalInfo] = useState(personalInfo);
   const [totalPrice, setTotalPrice] = useState(0);
 
@@ -33,20 +34,20 @@ export default function PersonalForm({
         phoneNumber: "",
         dateOfBirth: "",
         email: "",
+        countryCode: "+45",
       }));
       setLocalPersonalInfo(initialInfo);
     }
   }, [ticketQuantity]);
 
   useEffect(() => {
-    const ticketPrice =
-      ticketQuantity * (ticketType === "regular" ? prices.regular : prices.vip);
+    const ticketPrice = ticketQuantity * (ticketType === "regular" ? prices.regular : prices.vip);
     const addOnPrice =
-      (campingOptions.greenCamping ? prices.greenCamping : 0) +
-      campingOptions.twoPersonTent * prices.TwoPersonsTent +
-      campingOptions.threePersonTent * prices.ThreePersonsTent;
+      (camping.greenCamping ? prices.greenCamping : 0) +
+      camping.twoPersonTent * prices.TwoPersonsTent +
+      camping.threePersonTent * prices.ThreePersonsTent;
     setTotalPrice(ticketPrice + addOnPrice + prices.fee);
-  }, [ticketQuantity, ticketType, campingOptions]);
+  }, [ticketQuantity, ticketType, camping]);
 
   const handleInputChange = (index, field, value) => {
     setLocalPersonalInfo((prev) => {
@@ -56,33 +57,14 @@ export default function PersonalForm({
     });
   };
 
-  //ChatGpt prompt: Jeg arbejder på en React-komponent, hvor jeg har brug for hjælp til at implementere patterns i input felter. Kan du forklare, hvordan jeg kan tilføje patterns for at validere data som fornavn (kun bogstaver), efternavn (kun bogstaver), telefonnummer (starter med + og kun tal), og email (gyldig email format)? Jeg vil også gerne vide, hvordan jeg kan bruge ARIA-attributter for tilgængelighed.
-
-  const handlePhoneKeyPress = (e) => {
-    const allowedChars = /^[0-9+]+$/;
-    if (!allowedChars.test(e.key) && !e.ctrlKey && e.key !== "Backspace") {
-      e.preventDefault();
-    }
-  };
+ 
 
   const handleSubmit = (event) => {
     event.preventDefault();
-
-    const orderData = localPersonalInfo.map((info) => ({
-      first_name: info.firstName,
-      last_name: info.lastName,
-      email: info.email,
-      phone: info.phoneNumber,
-      amount: ticketQuantity,
-      birthday: info.dateOfBirth,
-      id: info.id,
-    }));
-
-    onClick({
-      personalInfo: localPersonalInfo,
-      totalPrice: totalPrice,
-    });
-    onNext();
+    if (validateForm(event.target)) {
+      onClick({ personalInfo: localPersonalInfo, totalPrice });
+      onNext();
+    }
   };
 
   return (
@@ -110,8 +92,6 @@ export default function PersonalForm({
                           { "": open }
                         )}
                         aria-expanded={open}
-                        //ChatGpt prompt: Jeg udvikler en formular i React og ønsker at forbedre tilgængeligheden ved at bruge ARIA-attributter. Kan du forklare, hvordan jeg kan tilføje ARIA labels for input felter som fornavn, efternavn, telefonnummer, fødselsdato, og email? Jeg vil gerne sikre, at skærmlæsere korrekt kan identificere hvert felt og dets formål.
-
                         aria-controls={`panel-${index}`}
                       >
                         Billet {index + 1} ({ticketType})
@@ -142,11 +122,7 @@ export default function PersonalForm({
                             title="Fornavn må kun indeholde bogstaver."
                             required
                             onChange={(e) =>
-                              handleInputChange(
-                                index,
-                                "firstName",
-                                e.target.value
-                              )
+                              handleInputChange(index, "firstName", e.target.value)
                             }
                           />
                           <Description className="xsmall-size hidden peer-focus:block">
@@ -168,11 +144,7 @@ export default function PersonalForm({
                             title="Efternavn må kun indeholde bogstaver."
                             required
                             onChange={(e) =>
-                              handleInputChange(
-                                index,
-                                "lastName",
-                                e.target.value
-                              )
+                              handleInputChange(index, "lastName", e.target.value)
                             }
                           />
                           <Description className=" xsmall-size hidden peer-focus:block">
@@ -184,27 +156,37 @@ export default function PersonalForm({
                           <Label htmlFor={`phoneNumber-${index}`}>
                             Telefonnummer:
                           </Label>
-                          <input
-                            id={`phoneNumber-${index}`}
-                            type="tel"
-                            value={info.phoneNumber}
-                            className="peer w-full p-2 border bg-inputFieldColor text-bgColor rounded-lg focus:outline-none focus:ring-2 focus:ring-accentColor"
-                            aria-label={`Telefonnummer for billet ${index + 1}`}
-                            pattern="^\+\d+$"
-                            title="Telefonnummeret skal starte med et + og kun indeholde tal."
-                            onKeyPress={handlePhoneKeyPress}
-                            required
-                            onChange={(e) =>
-                              handleInputChange(
-                                index,
-                                "phoneNumber",
-                                e.target.value
-                              )
-                            }
-                          />
+                          <div className="flex space-x-2">
+                            <select
+                              value={info.countryCode}
+                              onChange={(e) => handleInputChange(index, "countryCode", e.target.value)}
+                              className="p-2 bg-inputFieldColor text-bgColor rounded-lg focus:outline-none focus:ring-2 focus:ring-accentColor"
+                              aria-label="Vælg landekode"
+                              required
+                            >
+                              {countryCodes.map((country) => (
+                                <option key={country.code} value={country.code}>
+                                  {country.label} {country.code}
+                                </option>
+                              ))}
+                            </select>
+                            <input
+                              id={`phoneNumber-${index}`}
+                              type="tel"
+                              value={info.phoneNumber}
+                              className="peer w-full p-2 border bg-inputFieldColor text-bgColor rounded-lg focus:outline-none focus:ring-2 focus:ring-accentColor"
+                              aria-label={`Telefonnummer for billet ${index + 1}`}
+                              pattern="\d+"
+                              title="Telefonnummeret skal kun indeholde tal."
+                              onKeyPress={handlePhoneKeyPress}
+                      
+                              onChange={(e) =>
+                                handleInputChange(index, "phoneNumber", e.target.value)
+                              }
+                            />
+                          </div>
                           <Description className=" xsmall-size hidden peer-focus:block">
-                            Telefonnummeret skal starte med et + og kun
-                            indeholde tal
+                            Telefonnummeret skal kun indeholde tal
                           </Description>
                         </Field>
 
@@ -221,11 +203,7 @@ export default function PersonalForm({
                             min="1923-01-01"
                             required
                             onChange={(e) =>
-                              handleInputChange(
-                                index,
-                                "dateOfBirth",
-                                e.target.value
-                              )
+                              handleInputChange(index, "dateOfBirth", e.target.value)
                             }
                           />
                           <Description className="xsmall-size hidden peer-focus:block">
@@ -275,7 +253,7 @@ export default function PersonalForm({
               className="bg-bgColor border-2 rounded-lg border-inputFieldColor text-secondaryColor transition-colors duration-100 ease-in-out hover:bg-secondaryColor hover:text-bgColor hover:border-bgColor px-5 py-3 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor"
               aria-label="Fortsæt"
             >
-              Forsæt
+              Fortsæt
             </button>
           </div>
         </form>
@@ -283,7 +261,7 @@ export default function PersonalForm({
           <CartSummary
             ticketType={ticketType}
             ticketQuantity={ticketQuantity}
-            campingOptions={campingOptions}
+            campingOptions={camping}
           />
         </div>
       </div>
