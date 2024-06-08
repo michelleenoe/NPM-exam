@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import prices from "../backend/settings.js";
-import { fetchAPI } from "../../app/api/api.js";
+import { fetchAPI } from "@/app/api/api.js";
+import { calculateTotalPrice } from "@/utils/calculateTotalPrice";
+import { krona_one } from "@/app/fonts.jsx";
 import {
   Field,
   Label,
@@ -11,43 +13,21 @@ import {
 } from "@headlessui/react";
 import { ChevronDownIcon, CheckIcon } from "@heroicons/react/24/solid";
 import clsx from "clsx";
-import { krona_one } from "@/app/fonts.jsx";
 import CartSummary from "./CartSummary";
 
-function calculateTotalPrice(ticketQuantity, ticketType, campingOptions) {
-  const ticketPrice =
-    ticketQuantity * (ticketType === "regular" ? prices.regular : prices.vip);
-  const addOnPrice =
-    (campingOptions.greenCamping ? prices.greenCamping : 0) +
-    campingOptions.twoPersonTent * prices.TwoPersonsTent +
-    campingOptions.threePersonTent * prices.ThreePersonsTent;
-  return ticketPrice + addOnPrice + prices.fee;
-}
+export default function Camping({ bookingData, onClick, onNext, onBack }) {
+  const { ticketQuantity, ticketType, camping: campingOptions } = bookingData;
 
-export default function Camping({
-  ticketQuantity,
-  ticketType,
-  campingOptions,
-  onClick,
-  onNext,
-  onBack,
-  setBookingData,
-}) {
-  const [greenCamping, setGreenCamping] = useState(
-    campingOptions.greenCamping || false
-  );
-  const [twoPersonTent, setTwoPersonTent] = useState(
-    campingOptions.twoPersonTent || 0
-  );
-  const [threePersonTent, setThreePersonTent] = useState(
-    campingOptions.threePersonTent || 0
-  );
+  const [localCampingData, setLocalCampingData] = useState({
+    greenCamping: campingOptions.greenCamping || false,
+    twoPersonTent: campingOptions.twoPersonTent || 0,
+    threePersonTent: campingOptions.threePersonTent || 0,
+    selectedArea: campingOptions.selectedArea || "",
+  });
   const [campingAreas, setCampingAreas] = useState([]);
-  const [selectedArea, setSelectedArea] = useState(
-    campingOptions.selectedArea || ""
-  );
-  const [totalPrice, setTotalPrice] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const totalPrice = calculateTotalPrice(ticketQuantity, ticketType, localCampingData);
 
   useEffect(() => {
     const loadCampingAreas = async () => {
@@ -58,72 +38,40 @@ export default function Camping({
   }, []);
 
   useEffect(() => {
-    const campingOptions = { greenCamping, twoPersonTent, threePersonTent };
-    const totalPrice = calculateTotalPrice(
-      ticketQuantity,
-      ticketType,
-      campingOptions
-    );
-    setTotalPrice(totalPrice);
-  }, [
-    greenCamping,
-    twoPersonTent,
-    threePersonTent,
-    ticketQuantity,
-    ticketType,
-  ]);
+    onClick({ camping: localCampingData });
+  }, [localCampingData]);
 
-  useEffect(() => {
-    onClick({
-      camping: { greenCamping, twoPersonTent, threePersonTent, selectedArea },
-    });
-  }, [greenCamping, twoPersonTent, threePersonTent, selectedArea]);
+  const handleChange = (field, value) => {
+    setLocalCampingData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
 
   const handleQuantityChange = (type, increment) => {
-    if (type === "twoPersonTent") {
-      setTwoPersonTent((prev) => {
-        const newQuantity = Math.max(0, prev + increment);
-        const totalTents = newQuantity + threePersonTent;
-        return totalTents <= ticketQuantity ? newQuantity : prev;
-      });
-    } else if (type === "threePersonTent") {
-      setThreePersonTent((prev) => {
-        const newQuantity = Math.max(0, prev + increment);
-        const totalTents = twoPersonTent + newQuantity;
-        return totalTents <= ticketQuantity ? newQuantity : prev;
-      });
-    }
+    setLocalCampingData(prev => {
+      const newValue = Math.max(0, prev[type] + increment);
+      const totalTents = (type === "twoPersonTent" ? newValue : prev.twoPersonTent) +
+                         (type === "threePersonTent" ? newValue : prev.threePersonTent);
+
+      return totalTents <= ticketQuantity ? { ...prev, [type]: newValue } : prev;
+    });
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!selectedArea || selectedArea === "") {
-      setErrorMessage(
-        "Du skal vælge et campingområde, inden du kan gå videre."
-      );
+    if (!localCampingData.selectedArea) {
+      setErrorMessage("Du skal vælge et campingområde, inden du kan gå videre.");
       return;
     }
 
     const reservation = await fetchAPI("/reserve-spot", {
       method: "PUT",
-      body: JSON.stringify({
-        area: selectedArea,
-        amount: ticketQuantity,
-      }),
+      body: JSON.stringify({ area: localCampingData.selectedArea, amount: ticketQuantity }),
     });
 
-    setBookingData((old) => ({
-      ...old,
-      area: selectedArea,
-      ticketQuantity,
-      ticketType,
-      greenCamping,
-      twoPersonTent,
-      threePersonTent,
-      orderId: reservation.id,
-    }));
-
+    onClick({ area: localCampingData.selectedArea, orderId: reservation.id });
     onNext();
   };
 
@@ -144,17 +92,14 @@ export default function Camping({
             >
               Camping Tilvalg
             </Legend>
-            <p className="xsmall-size">
-              Bemærk: Prisen inkluderer opsætning af dit telt af vores team
-            </p>
 
             <Field className="space-y-4">
-              <Label htmlFor="campingArea">Vælg Campingområde</Label>
+              <Label htmlFor="campingArea">Nedenunder skal du vælge campingområde. <br></br> Dette er inkluderet i billetprisen.</Label>
               <div className="relative">
                 <Select
                   id="campingArea"
-                  value={selectedArea}
-                  onChange={(e) => setSelectedArea(e.target.value)}
+                  value={localCampingData.selectedArea}
+                  onChange={(e) => handleChange('selectedArea', e.target.value)}
                   className={clsx(
                     "mt-1 block w-full appearance-none border-none rounded-lg bg-inputFieldColor text-bgColor py-2 px-5",
                     "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accentColor"
@@ -175,9 +120,11 @@ export default function Camping({
                 />
               </div>
             </Field>
+            
 
             <table className="min-w-full rounded-lg">
               <thead>
+              
                 <tr>
                   <th className="text-left px-4 py-3 rounded-tl-lg text-bgColor bg-primaryTextColor">
                     Tilvalg
@@ -190,22 +137,22 @@ export default function Camping({
                   </th>
                 </tr>
               </thead>
+              
               <tbody>
+              
                 <tr>
                   <td className="px-4 pb-2 pt-6">2 pers telt</td>
                   <td className="px-4 pb-2 pt-6 text-center">
                     <div className="flex items-center justify-center space-x-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          handleQuantityChange("twoPersonTent", -1)
-                        }
+                        onClick={() => handleQuantityChange("twoPersonTent", -1)}
                         aria-label="Decrease 2 person tent quantity"
                         className="px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor"
                       >
                         -
                       </button>
-                      <span>{twoPersonTent}</span>
+                      <span>{localCampingData.twoPersonTent}</span>
                       <button
                         type="button"
                         onClick={() => handleQuantityChange("twoPersonTent", 1)}
@@ -226,20 +173,16 @@ export default function Camping({
                     <div className="flex items-center justify-center space-x-2">
                       <button
                         type="button"
-                        onClick={() =>
-                          handleQuantityChange("threePersonTent", -1)
-                        }
+                        onClick={() => handleQuantityChange("threePersonTent", -1)}
                         aria-label="Decrease 3 person tent quantity"
                         className="px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor"
                       >
                         -
                       </button>
-                      <span>{threePersonTent}</span>
+                      <span>{localCampingData.threePersonTent}</span>
                       <button
                         type="button"
-                        onClick={() =>
-                          handleQuantityChange("threePersonTent", 1)
-                        }
+                        onClick={() => handleQuantityChange("threePersonTent", 1)}
                         aria-label="Increase 3 person tent quantity"
                         className="px-2 py-1 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor"
                       >
@@ -252,11 +195,16 @@ export default function Camping({
                   </td>
                 </tr>
                 <tr>
-                  <td className="px-4 pb-6 pt-2">Grøn camping</td>
+                  <td className="px-4 pb-6 pt-2">
+                    Grøn camping{" "}<br></br>
+                    <span className="text-xs text-primaryTextColor/60">
+                      (Lav miljøpåvirkning)
+                    </span>
+                  </td>
                   <td className="px-4 pb-6 pt-4 flex justify-center text-center items-center">
                     <Checkbox
-                      checked={greenCamping}
-                      onChange={setGreenCamping}
+                      checked={localCampingData.greenCamping}
+                      onChange={(value) => handleChange('greenCamping', value)}
                       className="h-6 w-6 rounded bg-inputFieldColor text-accentColor focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-accentColor"
                     >
                       {({ checked }) => (
@@ -304,6 +252,9 @@ export default function Camping({
                 )}
               </tfoot>
             </table>
+            <p className="xsmall-size">
+              Hvis du vælger en teltløsning er opsætning inkluderet i prisen af vores team.
+            </p>
 
             <div className="flex justify-between">
               <button
@@ -328,7 +279,7 @@ export default function Camping({
         <CartSummary
           ticketType={ticketType}
           ticketQuantity={ticketQuantity}
-          campingOptions={campingOptions}
+          campingOptions={localCampingData}
         />
       </div>
     </div>
