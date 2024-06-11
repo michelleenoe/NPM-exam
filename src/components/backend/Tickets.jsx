@@ -45,7 +45,7 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
     <div className="pt-8 pb-16 col-start-3 gap-3 flex flex-wrap items-center justify-center">
       <form
         onSubmit={handleSubmit}
-        className="bg-secondaryBgColor p-10 rounded-lg shadow-md shadow-primaryColor w-full max-w-3xl"
+        className="bg-secondaryBgColor p-10 rounded-lg shadow-md shadow-primaryColor w-full max-w-3xl transition-all duration-300"
       >
         <Fieldset className="space-y-6">
           <Legend
@@ -65,10 +65,10 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
                 value={option.name.toLowerCase()}
                 className={({ active, checked }) =>
                   clsx(
-                    "relative flex cursor-pointer rounded-lg bg-bgColor py-6 px-8 shadow-md transition focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor",
+                    "relative flex cursor-pointer rounded-lg bg-bgColor py-6 px-8 shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor",
                     {
                       "ring-2 ring-offset-2 ring-accentColor": active,
-                      "bg-primaryTextColor/10": checked,
+                      "bg-primaryTextColor/10 transform scale-105": checked,
                     }
                   )
                 }
@@ -88,7 +88,7 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
                     </div>
                     {checked && (
                       <CheckCircleIcon
-                        className="h-8 w-8 fill-accentColor"
+                        className="h-8 w-8 fill-accentColor transition-all duration-300 transform scale-125"
                         aria-hidden="true"
                       />
                     )}
@@ -98,7 +98,7 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
             ))}
           </RadioGroup>
           <Field className="flex flex-col small-size">
-            <Label htmlFor="ticketQuantity" className="mb-4 text-lg">
+            <Label htmlFor="ticketQuantity" className="mb-1 font-bold">
               Vælg antal billetter:
             </Label>
             <div className="relative">
@@ -107,8 +107,8 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
                 value={localData.ticketQuantity}
                 onChange={(e) => handleChange('ticketQuantity', parseInt(e.target.value, 10))}
                 className={clsx(
-                  "mt-0 block w-full appearance-none border-none rounded-lg bg-inputFieldColor text-bgColor py-3 px-4",
-                  "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accentColor"
+                  "mt-1 block w-28 appearance-none border-none rounded-lg bg-inputFieldColor text-bgColor py-2 px-5 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accentColor",
+                  "focus:shadow-lg"
                 )}
                 aria-describedby="ticketQuantity-description"
                 required
@@ -118,8 +118,8 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
                 ))}
               </Select>
               <ChevronDownIcon
-                className="pointer-events-none absolute top-3 right-3 h-5 w-5 fill-bgColor"
-                aria-hidden="true"
+                 className="pointer-events-none absolute top-3.5 left-20 size-5 fill-bgColor transition-transform duration-300"
+                  aria-hidden="true"
               />
             </div>
           </Field>
@@ -129,7 +129,7 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
           <div className="flex justify-end mt-6">
             <button
               type="submit"
-              className="bg-bgColor rounded-lg border-2 border-inputFieldColor text-secondaryColor transition-colors duration-100 ease-in-out hover:bg-secondaryColor hover:text-bgColor hover:border-bgColor px-5 py-3 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor"
+              className="bg-bgColor rounded-lg border-2 border-inputFieldColor text-secondaryColor transition-colors duration-300 ease-in-out hover:bg-secondaryColor hover:text-bgColor hover:border-bgColor px-5 py-3 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-accentColor"
               aria-label="Køb billetter"
             >
               Køb billetter
