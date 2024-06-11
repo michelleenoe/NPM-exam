@@ -4,8 +4,6 @@ export const handlePhoneKeyPress = (e) => {
       e.preventDefault();
     }
   };
-  
   export const validateForm = (form) => {
     return form.checkValidity();
   };
-  
