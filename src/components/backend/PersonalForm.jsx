@@ -25,6 +25,7 @@ export default function PersonalForm({ bookingData, onClick, onNext, onBack }) {
   const { personalInfo, ticketQuantity, ticketType, camping } = bookingData;
   const [localPersonalInfo, setLocalPersonalInfo] = useState(personalInfo);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     if (localPersonalInfo.length === 0) {
@@ -57,13 +58,33 @@ export default function PersonalForm({ bookingData, onClick, onNext, onBack }) {
     });
   };
 
- 
+  // Nyt --> tilføjet dato til at validere at køber er 18 år 
+  const isOldEnough = (dateString) => {
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    return age > 18 || (age === 18 && m >= 0 && today.getDate() >= birthDate.getDate());
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (validateForm(event.target)) {
+    let valid = true;
+    let message = "";
+
+    localPersonalInfo.forEach((info, index) => {
+      if (!isOldEnough(info.dateOfBirth)) {
+        valid = false;
+        message = `Billet ${index + 1} skal være mindst 18 år gammel.`;
+      }
+    });
+
+    if (validateForm(event.target) && valid) {
+      setErrorMessage("");
       onClick({ personalInfo: localPersonalInfo, totalPrice });
       onNext();
+    } else {
+      setErrorMessage(message || "Formularen er ikke korrekt udfyldt.");
     }
   };
 
@@ -179,7 +200,6 @@ export default function PersonalForm({ bookingData, onClick, onNext, onBack }) {
                               pattern="\d+"
                               title="Telefonnummeret skal kun indeholde tal."
                               onKeyPress={handlePhoneKeyPress}
-                      
                               onChange={(e) =>
                                 handleInputChange(index, "phoneNumber", e.target.value)
                               }
@@ -238,6 +258,10 @@ export default function PersonalForm({ bookingData, onClick, onNext, onBack }) {
               </Disclosure>
             ))}
           </fieldset>
+
+          {errorMessage && (
+            <div className="text-red-600 text-sm mt-4">{errorMessage}</div>
+          )}
 
           <div className="flex justify-between mt-8">
             <button
