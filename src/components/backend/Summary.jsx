@@ -3,6 +3,12 @@ import RegularTicketSVG from "./RegularTicketSVG";
 import VIPTicketSVG from "./VIPTicketSVG";
 import CartSummary from "./CartSummary";
 
+// Funktion til at formatere datoen til dd-mm-yyyy
+const formatDate = (dateString) => {
+  const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+  return new Date(dateString).toLocaleDateString('da-DK', options);
+};
+
 export default function SummaryPage({ bookingData, onBack, onNext }) {
   const { ticketType, ticketQuantity, personalInfo, camping, totalPrice } = bookingData;
 
@@ -10,55 +16,60 @@ export default function SummaryPage({ bookingData, onBack, onNext }) {
 
   return (
     <div className="grid grid-cols-gridContent">
-      <div className="pt-8 pb-16 col-start-3 gap-3 flex flex-wrap items-center justify-center ">
-        <div className="bg-secondaryBgColor rounded-lg p-8 shadow-lg w-full max-w-s">
-          <h2 className={`${krona_one.className} large-size text-primaryTextColor mb-6`}>
+      <div className="pt-8 pb-16 col-start-3 gap-3 flex flex-wrap items-center justify-center">
+        <div className="bg-secondaryBgColor rounded-lg p-8 shadow-lg w-full max-w-xl">
+          <h2 className={`${krona_one.className} text-3xl text-primaryTextColor mb-6`}>
             Opsummering
           </h2>
           
-          
           <div className="mb-6 space-y-6">
-            <div className="flex flex-wrap md:justify-evenly items-center mb-8 gap-2">
-              <div className="normal-size">
-                <p className="font-semibold mb-2">Billetter:</p>
-                <p className="mb-2">
-                  {ticketType.charAt(0).toUpperCase() + ticketType.slice(1)} billet x {ticketQuantity}
-                  <div className="space-y-4 mt-6">
-                {camping.selectedArea && (
-                  <p><b>Camping område:</b> {camping.selectedArea}</p>
-                )}
-                <p>Tilvalg:</p>
-                {camping.greenCamping && (
-                  <p><b>Green Camping:</b> {camping.greenCamping ? "Yes" : "No"}</p>
-                )}
-                {camping.twoPersonTent > 0 && (
-                  <p><b>2 personers telt x</b> {camping.twoPersonTent}</p>
-                )}
-                {camping.threePersonTent > 0 && (
-                  <p><b>3 personers telt x</b> {camping.threePersonTent}</p>
-                )}
-              </div>
-         
+            <div className="flex flex-wrap md:justify-between items-center mb-8 gap-4">
+              <div>
+                <p className="text-lg mb-2">Billetter:<br></br>
+                  {ticketType.charAt(0).toUpperCase() + ticketType.slice(1)} x {ticketQuantity}
                 </p>
+                <div className="space-y-4 mt-4">
+                  {camping.selectedArea && (
+                    <p className="text-lg mb-2">Campingområde: <br></br>{camping.selectedArea}</p>
+                  )}
+                  {(camping.greenCamping || camping.twoPersonTent > 0 || camping.threePersonTent > 0) && (
+                    <div>
+                      <p className="text-lg mt-4">Tilvalg:</p>
+                      {camping.twoPersonTent > 0 && (
+                        <p>2 Pers telt x {camping.twoPersonTent}</p>
+                      )}
+                      {camping.threePersonTent > 0 && (
+                        <p>3 Pers telt x {camping.threePersonTent}</p>
+                      )}
+                      {camping.greenCamping && (
+                        <p>Green Camping {camping.greenCamping}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
-              <TicketSVG className="w-64" aria-hidden="true" />
+              <TicketSVG className="w-60" aria-hidden="true" />
             </div>
             
             <div className="space-y-5">
               <h3 className="text-xl font-semibold">Personlige oplysninger</h3>
               {personalInfo.map((info, index) => (
-                <div key={index} className="bg-bgColor p-4 rounded-lg">
-                  <p><b>Billet {index + 1}</b> ({ticketType})</p>
-                  <p><b>Fornavn:</b> {info.firstName}</p>
-                  <p><b>Efternavn:</b> {info.lastName}</p>
-                  <p><b>Telefonnummer:</b> {info.phoneNumber}</p>
-                  <p><b>Fødselsdato:</b> {info.dateOfBirth}</p>
-                  <p><b>Email:</b> {info.email}</p>
+                <div key={index} className="bg-bgColor p-4 rounded-lg space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><b>Fornavn:</b></div>
+                    <div>{info.firstName}</div>
+                    <div><b>Efternavn:</b></div>
+                    <div>{info.lastName}</div>
+                    <div><b>Telefonnummer:</b></div>
+                    <div>{info.phoneNumber}</div>
+                    <div><b>Fødselsdato:</b></div>
+                    <div>{formatDate(info.dateOfBirth)}</div>
+                    <div><b>Email:</b></div>
+                    <div>{info.email}</div>
+                  </div>
                 </div>
               ))}
             </div>
-
-          
           </div>
           
           <div className="flex justify-between mt-8">
@@ -79,7 +90,7 @@ export default function SummaryPage({ bookingData, onBack, onNext }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-center fixed w-full max-w-md md:w-44">
+        <div className="flex items-center justify-center w-full max-w-md mt-8">
           <CartSummary
             ticketType={ticketType}
             ticketQuantity={ticketQuantity}

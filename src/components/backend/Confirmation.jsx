@@ -16,23 +16,27 @@ export default function ConfirmationPage({ bookingData }) {
         <h2
           className={`${krona_one.className} text-center text-3xl text-primaryTextColor mb-6`}
         >
-          Ordrebekræftelse
+          Tak for dit køb!
         </h2>
+        
         <div className="flex items-center justify-center">
-          <p className="text-lg font-semibold text-primaryTextColor">
-            Tak for dit køb!
-          </p>
+        
           </div>
-          <div className="flex items-center justify-center">
-          <TicketSVG className="h-60 w-60" />
-        </div>
-        <div className="text-center mb-6">
-          <p className="text-lg text-primaryTextColor">Dit ordrenummer er:</p>
-          <p className="text-2xl font-bold text-primaryTextColor">{orderId}</p>
-        </div>
-        <p className="text-center text-lg mb-8 text-primaryTextColor">
-          En ordrebekræftelse er sendt til <span className="font-semibold"> {email}</span>.
+          <p className="text-center text-lg mb-8 text-primaryTextColor">
+          En ordrebekræftelse er sendt til: <span className="font-semibold"> {email}</span>
+          <p className="text-lg text-primaryTextColor">Dit ordrenummer er: {orderId}</p>
         </p>
+          {/* <div className="flex items-center justify-center">
+          <TicketSVG className="h-60 w-60" />
+        </div> */}
+        <div className="text-center mb-6">
+          <p className="text-lg text-primaryTextColor">
+            Vi glæder os til at fejre FooFest sammen. 
+          </p>
+          
+        </div>
+        
+     
         <div className="flex justify-between">
           <Link href="/timeTable/">
             <Button title="Tidsplan" />
