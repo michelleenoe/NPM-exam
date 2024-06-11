@@ -15,7 +15,7 @@ import CartSummary from "./CartSummary";
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 
 const countryCodes = [
-  { code: "+47", label: "DK" },
+  { code: "+45", label: "DK" },
   { code: "+46", label: "SE" },
   { code: "+47", label: "NO" },
   { code: "+49", label: "DE" },
