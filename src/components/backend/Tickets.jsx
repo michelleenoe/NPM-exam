@@ -29,7 +29,6 @@ export default function TicketsForm({ bookingData, onClick, onNext }) {
       [field]: value
     }));
   };
-
   const handleSubmit = (event) => {
     event.preventDefault();
     onClick(localData);
