@@ -240,7 +240,7 @@ export default function Camping({ bookingData, onClick, onNext, onBack }) {
                     colSpan="3"
                     className="text-center px-4 py-3 bg-primaryTextColor rounded-b-lg text-bgColor"
                   >
-                    <strong>Total Pris: {totalPrice} DKK</strong>
+                    <strong>I alt: {totalPrice} DKK</strong>
                   </td>
                 </tr>
                 {errorMessage && (
